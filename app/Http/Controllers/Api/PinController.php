@@ -12,30 +12,24 @@ class PinController extends Controller
     public function buatPin(Request $request)
     {
         $request->validate([
-            'ID_User' => 'required',
             'Kode_PIN' => 'required|digits:6'
         ]);
 
-        $cekPin = Pin::where('ID_User', $request->ID_User)->first();
+        $userId = $request->user()->ID_User;
+        $cekPin = Pin::where('ID_User', $userId)->first();
 
         if ($cekPin) {
-            return response()->json([
-                'message' => 'PIN sudah pernah dibuat'
-            ], 400);
+            return response()->json(['message' => 'PIN sudah pernah dibuat'], 400);
         }
 
         $pin = Pin::create([
-            'ID_User' => $request->ID_User,
+            'ID_User' => $userId,
             'Kode_PIN' => Hash::make($request->Kode_PIN)
-
-        
         ]);
 
         return response()->json([
             'message' => 'PIN berhasil dibuat',
-            'data' => [
-                'ID_User' => $pin->ID_User
-            ]
+            'data' => ['ID_User' => $pin->ID_User]
         ], 201);
     }
 }

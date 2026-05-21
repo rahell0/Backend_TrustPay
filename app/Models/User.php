@@ -2,33 +2,25 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
+use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
 
-class User extends Model
+class User extends Authenticatable
 {
-    protected $table = 'users';
+    use HasApiTokens, Notifiable;
 
-    protected $primaryKey = 'ID_User';
+    protected $table = 'users';
+    protected $primaryKey = 'ID_User'; // Beritahu Laravel kalau primary key bukan 'id'
 
     protected $fillable = [
-        'nama',
+        'username',
         'email',
         'password'
     ];
 
     protected $hidden = [
-        'password'
+        'password',
+        'remember_token',
     ];
-
-     // RELASI PIN
-    public function pin()
-    {
-        return $this->hasOne(Pin::class, 'ID_User', 'ID_User');
-    }
-
-    // RELASI SALDO
-    public function saldo()
-    {
-        return $this->hasMany(Saldo::class, 'ID_User', 'ID_User');
-    }
 }

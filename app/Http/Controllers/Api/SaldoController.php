@@ -10,80 +10,36 @@ class SaldoController extends Controller
 {
     public function topUp(Request $request)
     {
-    
-        // VALIDASI
         $request->validate([
-
-            'ID_User' => 'required',
-
-            'mata_uang' => 'required|in:IDR,USD,EUR',
-
-            'jumlah' => 'required|numeric|min:1'
-
+            'jumlah' => 'required|numeric|min:1',
+            'mata_uang' => 'nullable|string|max:3'
         ]);
 
-        // CEK SALDO
-        $saldo = Saldo::where('ID_User', $request->ID_User)
-                        ->where('mata_uang', $request->mata_uang)
-                        ->first();
+        $userId = $request->user()->ID_User;
+        $currency = $request->input('mata_uang', 'IDR');
 
-        // JIKA BELUM ADA
+        $saldo = Saldo::where('ID_User', $userId)
+                      ->where('mata_uang', $currency)
+                      ->first();
+
         if (!$saldo) {
-
             $saldo = Saldo::create([
-
-                'ID_User' => $request->ID_User,
-
-                'mata_uang' => $request->mata_uang,
-
-                'jumlah_saldo' => $request->jumlah
-
+                'ID_User' => $userId,
+                'jumlah_saldo' => $request->jumlah,
+                'mata_uang' => $currency
             ]);
-
         } else {
-
-            // TAMBAH SALDO
             $saldo->jumlah_saldo += $request->jumlah;
-
             $saldo->save();
         }
 
-        // RESPONSE
         return response()->json([
-
             'message' => 'Top Up berhasil',
-
             'data' => [
-
                 'ID_User' => $saldo->ID_User,
-
-                'mata_uang' => $saldo->mata_uang,
-
-                'total_saldo' => $saldo->jumlah_saldo
-
+                'total_saldo' => $saldo->jumlah_saldo,
+                'mata_uang' => $saldo->mata_uang
             ]
-
         ], 200);
     }
-    public function cekSaldo($id)
-{
-    $saldo = Saldo::where('ID_User', $id)->get();
-
-    if ($saldo->isEmpty()) {
-
-        return response()->json([
-
-            'message' => 'Saldo tidak ditemukan'
-
-        ], 404);
-    }
-
-    return response()->json([
-
-        'message' => 'Data saldo ditemukan',
-
-        'data' => $saldo
-
-    ], 200);
-  }
 }
