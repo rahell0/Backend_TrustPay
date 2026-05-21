@@ -11,8 +11,9 @@ return new class extends Migration
         Schema::create('saldo', function (Blueprint $table) {
             $table->bigIncrements('ID_Saldo');
             $table->unsignedBigInteger('ID_User');
-            $table->integer('jumlah_saldo')->default(0);
-            $table->string('mata_uang', 3)->default('IDR'); // <--- INI DIA YANG HILANG! JANGAN SAMPAI SAKTI LAGI
+            // KOREKSI: Gunakan bigInteger agar aman menampung ratusan juta rupiah atau konversi internasional
+            $table->bigInteger('jumlah_saldo')->default(0); 
+            $table->string('mata_uang', 3)->default('IDR'); 
             $table->timestamps();
 
             $table->foreign('ID_User')

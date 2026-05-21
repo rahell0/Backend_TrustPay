@@ -9,9 +9,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('users', function (Blueprint $table) {
-            $table->bigIncrements('ID_User'); // Primary Key custom sesuai kebutuhan aplikasi Anda
+            $table->bigIncrements('ID_User'); 
             $table->string('username');
-            $table->string('email')->unique();
+            $table->string('nomor_hp')->unique(); // KOREKSI: Email diganti menjadi nomor_hp
             $table->string('password');
             $table->rememberToken();
             $table->timestamps();
