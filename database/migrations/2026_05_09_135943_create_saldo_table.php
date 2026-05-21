@@ -12,7 +12,7 @@ return new class extends Migration
             $table->bigIncrements('ID_Saldo');
             $table->unsignedBigInteger('ID_User');
             $table->integer('jumlah_saldo')->default(0);
-            $table->string('mata_uang', 3)->default('IDR'); // Tambahan kolom yang sebelumnya hilang
+            $table->string('mata_uang', 3)->default('IDR'); // <--- INI DIA YANG HILANG! JANGAN SAMPAI SAKTI LAGI
             $table->timestamps();
 
             $table->foreign('ID_User')
