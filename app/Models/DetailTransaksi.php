@@ -11,13 +11,11 @@ class DetailTransaksi extends Model
     protected $primaryKey = 'ID_Detail';
 
     protected $fillable = [
-
         'ID_Transaksi',
         'bank_tujuan',
         'ewallet_tujuan',
         'nama_penerima',
         'negara_tujuan'
-
     ];
 
     public $timestamps = true;
@@ -27,4 +25,4 @@ class DetailTransaksi extends Model
     {
         return $this->belongsTo(Transaksi::class, 'ID_Transaksi', 'ID_Transaksi');
     }
-}
+} // <-- KOREKSI: Menghapus scope tiruan dan menutup class dengan benar agar tidak EOF

@@ -107,4 +107,17 @@ class AuthController extends Controller
             ]
         ], 200);
     }
+    /**
+     * FITUR LOGOUT: Menghapus token aktif nasabah (Sanctum)
+     */
+    public function logout(Request $request)
+    {
+        // Menghapus token yang saat ini sedang digunakan untuk login
+        $request->user()->currentAccessToken()->delete();
+
+        return response()->json([
+            'status'  => true,
+            'message' => 'Logout berhasil. Sesi token Anda telah dihapus dari sistem TrustPay.'
+        ], 200);
+    }
 }

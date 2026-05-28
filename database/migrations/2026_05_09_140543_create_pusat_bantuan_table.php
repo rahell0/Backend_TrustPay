@@ -6,39 +6,24 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('pusat_bantuan', function (Blueprint $table) {
-      
             $table->bigIncrements('ID_Bantuan');
-
-            $table->unsignedBigInteger('ID_Admin');
-
-            $table->string('kategori', 100);
-
-            $table->string('deskripsi', 255);
-
+            $table->unsignedBigInteger('ID_User')->nullable(); // Mengaitkan ke nasabah yang mengirim keluhan (Null jika FAQ)
+            $table->enum('tipe', ['faq', 'keluhan'])->default('faq'); // Pembeda kategori data
+            $table->string('pertanyaan_atau_subjek'); // Judul FAQ atau Subjek keluhan
+            $table->text('jawaban_atau_pesan');       // Isi jawaban FAQ atau isi pesan keluhan nasabah
+            $table->enum('status_keluhan', ['open', 'resolved'])->nullable(); // Khusus untuk melacak status keluhan nasabah
             $table->timestamps();
 
-            $table->foreign('ID_Admin')
-                  ->references('ID_Admin')
-                  ->on('admin')
-                  ->onDelete('cascade');
+            // Relasi ke tabel users
+            $table->foreign('ID_User')->references('ID_User')->on('users')->onDelete('cascade');
+    });
+}
 
-        });
-    }
-
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('pusat_bantuan');
-
-        
-            
     }
-};
+}; 

@@ -13,6 +13,7 @@ return new class extends Migration
             $table->string('username');
             $table->string('nomor_hp')->unique(); // KOREKSI: Email diganti menjadi nomor_hp
             $table->string('password');
+            $table->enum('role', ['user', 'admin'])->default('user');
             $table->rememberToken();
             $table->timestamps();
         });

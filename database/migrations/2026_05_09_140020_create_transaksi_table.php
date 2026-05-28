@@ -16,7 +16,7 @@ return new class extends Migration
 
             $table->unsignedBigInteger('ID_Admin')->nullable();
 
-            $table->string('jenis_transaksi', 15);
+            $table->string('jenis_transaksi');
 
             $table->integer('nominal');
 
