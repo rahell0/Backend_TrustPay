@@ -9,22 +9,15 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('detail_transaksi', function (Blueprint $table) {
-
             $table->bigIncrements('ID_Detail');
-
             $table->unsignedBigInteger('ID_Transaksi');
-
-            $table->string('bank_tujuan', 15)->nullable();
-
-            $table->string('ewallet_tujuan', 15)->nullable();
-
-            $table->string('nama_penerima', 20);
-
-            $table->string('negara_tujuan', 15)->nullable();
-
+            $table->string('bank_tujuan', 50)->nullable();    
+            $table->string('ewallet_tujuan', 50)->nullable(); 
+            $table->string('nomor_tujuan', 30)->nullable();   
+            $table->string('nama_penerima', 100);             
+            $table->string('negara_tujuan', 50)->nullable();   
             $table->timestamps();
 
-            // FOREIGN KEY
             $table->foreign('ID_Transaksi')
                   ->references('ID_Transaksi')
                   ->on('transaksi')

@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\TransferController;
 use App\Http\Controllers\Api\ExchangeController;
 use App\Http\Controllers\Api\InsightController;
 use App\Http\Controllers\Api\PusatBantuanController;
+use App\Http\Controllers\Api\NotifikasiController;
 
 // Rute Publik (Akses Tanpa Login)
 Route::post('/register', [AuthController::class, 'register']);
@@ -26,9 +27,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/transfer/internasional', [TransferController::class, 'transferInternasional']);
     Route::get('/exchange/kurs', [ExchangeController::class, 'index']);
     Route::post('/exchange/kalkulasi', [ExchangeController::class, 'hitungKalkulasi']);
-    Route::get('/transaksi/riwayat', [TransferController::class, 'riwayatTransaksi']);
+    Route::get('/notifikasi', [NotifikasiController::class, 'getNotifikasi']);
     Route::get('/insight/grafik', [InsightController::class, 'getInsightData']);
     Route::get('/pusat-bantuan/faq', [PusatBantuanController::class, 'getFaq']);
     Route::post('/pusat-bantuan/keluhan', [PusatBantuanController::class, 'kirimKeluhan']);
+    Route::post('/pusat-bantuan/faq', [PusatBantuanController::class, 'tambahFaq']);
+    Route::put('/pusat-bantuan/faq/{id}', [PusatBantuanController::class, 'editFaq']);
+    Route::delete('/pusat-bantuan/faq/{id}', [PusatBantuanController::class, 'hapusFaq']);
+    Route::post('/admin/kurs/update', [ExchangeController::class, 'updateKurs']);
     Route::post('/logout', [AuthController::class, 'logout']);
 });

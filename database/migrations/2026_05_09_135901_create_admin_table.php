@@ -14,6 +14,8 @@ return new class extends Migration
 
             $table->string('username', 20);
 
+            $table->string('nomor_hp')->unique();
+
             $table->string('password');
 
             $table->timestamps();

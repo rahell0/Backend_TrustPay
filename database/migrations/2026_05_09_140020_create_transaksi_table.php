@@ -24,11 +24,11 @@ return new class extends Migration
 
             $table->enum('status_transaksi', [
                 'pending',
-                'disetujui',
-                'ditolak'
-            ]);
+                'success',
+                'failed'
+            ])->default('success');
 
-            $table->date('tanggal_transaksi');
+            $table->dateTime('tanggal_transaksi');
 
             $table->timestamps();
 

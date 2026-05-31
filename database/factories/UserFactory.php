@@ -7,39 +7,19 @@ use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
-/**
- * @extends Factory<User>
- */
 class UserFactory extends Factory
 {
-    /**
-     * The current password being used by the factory.
-     */
     protected static ?string $password;
 
-    /**
-     * Define the model's default state.
-     *
-     * @return array<string, mixed>
-     */
     public function definition(): array
     {
+        // KOREKSI UTAMA: Ubah nama & email menjadi username & nomor_hp sesuai TrustPay
         return [
-            'nama' => fake()->name(),
-            'email' => fake()->unique()->safeEmail(),
-            'email_verified_at' => now(),
-            'password' => static::$password ??= Hash::make('password'),
+            'username' => fake()->userName(),
+            'nomor_hp' => '08' . fake()->numerify('##########'), // Menghasilkan nomor HP simulasi Indonesia
+            'password' => static::$password ??= Hash::make('Password123!'), // Sesuai regex password ketat kamu
+            'role' => 'nasabah',
             'remember_token' => Str::random(10),
         ];
-    }
-
-    /**
-     * Indicate that the model's email address should be unverified.
-     */
-    public function unverified(): static
-    {
-        return $this->state(fn (array $attributes) => [
-            'email_verified_at' => null,
-        ]);
     }
 }

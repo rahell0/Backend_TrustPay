@@ -124,4 +124,28 @@ class PusatBantuanController extends Controller
             'message' => 'FAQ berhasil dihapus dari sistem.'
         ], 200);
     }
+
+    /**
+     * 6. Admin melihat daftar keluhan dari semua nasabah
+     */
+    public function getKeluhanAdmin()
+    {
+        // Menarik semua data yang tipenya 'keluhan'
+        $keluhan = PusatBantuan::where('tipe', 'keluhan')
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        if ($keluhan->isEmpty()) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Belum ada keluhan nasabah yang masuk.'
+            ], 404);
+        }
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Seluruh data keluhan nasabah berhasil ditarik oleh Admin.',
+            'data' => $keluhan
+        ], 200);
+    }
 }

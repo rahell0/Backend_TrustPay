@@ -20,7 +20,7 @@ class TransferController extends Controller
     {
         // 1. VALIDASI INPUT SESUAI FIGMA
         $validator = Validator::make($request->all(), [
-            'bank_tujuan'    => 'required|in:BRI,BNI,Mandiri', 
+            'bank_tujuan'    => 'required|in:Mandiri,BCA,BRI', 
             'nomor_rekening' => 'required|numeric',
             'nominal'        => 'required|numeric|min:20000', // Sesuai teks Figma: "Minimal transfer Rp 20.000"
             'Kode_PIN'       => 'required|digits:6'
@@ -69,7 +69,7 @@ class TransferController extends Controller
             'jenis_transaksi'   => 'Send-Nasional',
             'nominal'           => $request->nominal,
             'mata_uang'         => 'IDR',
-            'status_transaksi'  => 'disetujui',
+            'status_transaksi'  => 'success',
             'tanggal_transaksi' => now()
         ]);
 
@@ -162,7 +162,7 @@ class TransferController extends Controller
             'jenis_transaksi'   => 'Send-Internasional',
             'nominal'           => $hasilKonversiIDR, 
             'mata_uang'         => 'IDR',
-            'status_transaksi'  => 'disetujui',
+            'status_transaksi'  => 'success',
             'tanggal_transaksi' => now()
         ]);
 

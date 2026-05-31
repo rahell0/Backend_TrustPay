@@ -48,10 +48,10 @@ class AuthController extends Controller
             'Kode_PIN' => Hash::make($request->pin)
         ]);
 
-        // 3. Buat Saldo default IDR (Mendukung visualisasi Dashboard Rp 100jt kamu nanti)
+        // 3. FIX: Berikan Saldo Simulasi Otomatis Rp 10.000.000 saat berhasil register
         Saldo::create([
             'ID_User'      => $user->ID_User,
-            'jumlah_saldo' => 0, // Nilai awal pendaftaran tetap 0, nanti di-TopUp lewat API Saldo
+            'jumlah_saldo' => 10000000, // <--- UBAH DI SINI (Dari 0 menjadi 10 Juta rupiah)
             'mata_uang'    => 'IDR'
         ]);
 
@@ -107,6 +107,7 @@ class AuthController extends Controller
             ]
         ], 200);
     }
+
     /**
      * FITUR LOGOUT: Menghapus token aktif nasabah (Sanctum)
      */

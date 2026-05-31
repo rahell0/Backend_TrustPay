@@ -26,5 +26,11 @@ class PusatBantuanSeeder extends Seeder
             'pertanyaan_atau_subjek' => 'Syarat dan Ketentuan',
             'jawaban_atau_pesan' => 'Pengguna wajib berusia minimal 17 tahun dan mematuhi regulasi keuangan yang berlaku di Indonesia.'
         ]);
+
+        PusatBantuan::create([
+    'tipe' => 'faq',
+    'pertanyaan_atau_subjek' => 'Penutupan akun TrustPay.id',
+    'jawaban_atau_pesan' => 'Untuk melakukan penutupan akun, pastikan seluruh saldo Anda sudah ditarik dan hubungi layanan pelanggan melalui menu kontak bantuan.'
+        ]);
     }
 }

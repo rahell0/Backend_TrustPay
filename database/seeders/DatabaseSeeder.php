@@ -12,6 +12,8 @@ class DatabaseSeeder extends Seeder
         $this->call([
             UserSeeder::class,
             EwalletAccountSeeder::class,
+            BankAccountSeeder::class,
+            ValasAccountSeeder::class,
             KursSeeder::class,
             TransaksiHistorySeeder::class,
             PusatBantuanSeeder::class,
