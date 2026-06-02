@@ -9,12 +9,13 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('kurs', function (Blueprint $table) {
-            $table->id('id_kurs');
+            // 🛡️ FIX: Menyamakan nama ID_Kurs dengan properti $primaryKey di model Kurs.php
+            $table->bigIncrements('ID_Kurs'); 
             $table->string('kode_valas', 5)->unique(); // USD, SGD, MYR, IDR
             $table->string('nama_valas', 50);
-            $table->decimal('kurs_beli', 15, 2); // Nilai beli bank dari user
-            $table->decimal('kurs_jual', 15, 2); // Nilai jual bank ke user
-            $table->decimal('nilai_ke_idr', 15, 2)->nullable(); // Nilai tengah untuk backup kalkulator
+            $table->decimal('kurs_beli', 15, 2); 
+            $table->decimal('kurs_jual', 15, 2); 
+            $table->decimal('nilai_ke_idr', 15, 2)->nullable(); 
             $table->timestamps();
         });
     }

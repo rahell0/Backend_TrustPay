@@ -13,34 +13,50 @@ class UserSeeder extends Seeder
 {
     public function run(): void
     {
-        // Bersihkan data lama dengan aman agar tidak terjadi bentrokan duplikat unique key nomor_hp
         DB::statement('SET FOREIGN_KEY_CHECKS=0;');
         User::truncate();
         Pin::truncate();
         Saldo::truncate();
         DB::statement('SET FOREIGN_KEY_CHECKS=1;');
 
-        // 1. DATA NASABAH UTAMA (Aktor Utama untuk Demo UI Dashboard Nasabah)
+        // =========================================================================
+        // 1. DATA ADMIN OTORITAS (Sesuai Panduan Teks Login Visual UI Admin Figma)
+        // =========================================================================
+        $admin = User::create([
+            'username' => 'admin', // Menggunakan username 'admin' sesuai petunjuk teks demo figma
+            'nomor_hp' => '081234567890',
+            'password' => Hash::make('trustpay2026'), // Password demonstrasi figma
+            'role'     => 'admin',
+            'status_operasional' => 'Aktif',
+            'created_at' => now()
+        ]);
+
+        // =========================================================================
+        // 2. DATA NASABAH UTAMA (Aktor Utama Pemilik Saldo Rp 10 Juta di UI Dashboard)
+        // =========================================================================
         $nasabahUtama = User::create([
             'username' => 'Angeliqia V G Pardosi',
             'nomor_hp' => '081362267690',
             'password' => Hash::make('Nasabah123@'),
             'role'     => 'user',
+            'status_operasional' => 'Aktif',
             'created_at' => '2026-01-05 08:30:22'
         ]);
 
         Pin::create([
             'ID_User'  => $nasabahUtama->ID_User,
-            'Kode_PIN' => Hash::make('123456')
+            'Kode_PIN' => Hash::make('123456') // Default PIN 6 Digit untuk demo pembayaran
         ]);
 
         Saldo::create([
             'ID_User'      => $nasabahUtama->ID_User,
-            'jumlah_saldo' => 10000000, // Rp 10.000.000 saldo awal simulasi sesuai Figma
+            'jumlah_saldo' => 10000000, // Rp 10.000.000 saldo awal simulasi UI Nasabah
             'mata_uang'    => 'IDR'
         ]);
 
-        // 2. 20 DATA DUMMY NASABAH TAMBAHAN (Disesuaikan Murni untuk Mengisi Tabel Frontend Admin)
+        // =========================================================================
+        // 3. DATA DUMMY NASABAH TAMBAHAN (Untuk Mengisi Tabel Manajemen Pengguna Admin)
+        // =========================================================================
         $dataNasabahDummy = [
             ['username' => 'Ahmad Syarif', 'nomor_hp' => '085211223344', 'saldo' => 4500000, 'tgl' => '2026-01-12 14:20:11'],
             ['username' => 'Clara Angelica', 'nomor_hp' => '087855667788', 'saldo' => 12500000, 'tgl' => '2026-02-05 09:11:45'],
@@ -65,7 +81,6 @@ class UserSeeder extends Seeder
         ];
 
         foreach ($dataNasabahDummy as $dummy) {
-            // Buat entitas User baru
             $userDummy = User::create([
                 'username' => $dummy['username'],
                 'nomor_hp' => $dummy['nomor_hp'],
@@ -75,13 +90,11 @@ class UserSeeder extends Seeder
                 'updated_at' => now()
             ]);
 
-            // Daftarkan PIN default untuk seluruh akun dummy
             Pin::create([
                 'ID_User'  => $userDummy->ID_User,
                 'Kode_PIN' => Hash::make('123456')
             ]);
 
-            // Alokasikan jumlah saldo simpanan IDR masing-masing user dummy
             Saldo::create([
                 'ID_User'      => $userDummy->ID_User,
                 'jumlah_saldo' => $dummy['saldo'],

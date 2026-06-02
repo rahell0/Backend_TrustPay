@@ -68,6 +68,7 @@ class TransferController extends Controller
             'ID_Admin'          => null,
             'jenis_transaksi'   => 'Send-Nasional',
             'nominal'           => $request->nominal,
+            'biaya_admin'       => $biayaAdmin,
             'mata_uang'         => 'IDR',
             'status_transaksi'  => 'success',
             'tanggal_transaksi' => now()
@@ -101,12 +102,12 @@ class TransferController extends Controller
 
     public function transferInternasional(Request $request)
     {
-        // 1. VALIDASI INPUT INTERNASIONAL SESUAI FIGMA
+        // 1. VALIDASI INPUT DISESUAIKAN DENGAN FORM RUPIAH DI FIGMA
         $validator = Validator::make($request->all(), [
             'negara_tujuan'  => 'required|in:United States,Malaysia',
             'mata_uang'      => 'required|in:USD,MYR',
             'nomor_rekening' => 'required',
-            'nominal_valas'  => 'required|numeric|min:1', // Jumlah mata uang asing yang ingin diterima penerima (e.g., 20 USD)
+            'nominal_idr'    => 'required|numeric|min:10000', // Frontend mengirim nominal dasar Rupiah yang diketik user
             'Kode_PIN'       => 'required|digits:6'
         ]);
 
@@ -122,7 +123,7 @@ class TransferController extends Controller
             return response()->json(['status' => false, 'message' => 'PIN salah'], 401);
         }
 
-        // 3. CEK REKENING VALAS TUJUAN DI DATABASE
+        // 3. CEK REKENING VALAS TARGET
         $valasTarget = ValasAccount::where('negara_tujuan', $request->negara_tujuan)
                                    ->where('mata_uang', $request->mata_uang)
                                    ->where('nomor_rekening', $request->nomor_rekening)
@@ -132,44 +133,41 @@ class TransferController extends Controller
             return response()->json(['status' => false, 'message' => 'Rekening internasional tidak terdaftar'], 404);
         }
 
-        // 4. SIMULASI SKEMA KURS & BIAYA SESUAI FIGMA KAMU
-        // Kita kunci kurs statis untuk keperluan demo tugas kuliah
-        $rate = ($request->mata_uang === 'USD') ? 17096 : 3850; 
-        $hasilKonversiIDR = $request->nominal_valas * $rate;
+        // 4. KALKULASI REVERSE (IDR ke VALAS) Sesuai Ringkasan Konversi UI
+        $rate = ($request->mata_uang === 'USD') ? 0.0001 : 0.0003; // Mengikuti visual kurs figma Anda: 1 IDR = 0.0001 USD
+        $hasilKonversiValas = $request->nominal_idr * $rate;
 
-        // Komponen Biaya tambahan dari screenshot Figma Internasional kamu
-        $biayaKomisi = 15000;
-        $biayaTransaksi = 35000;
-        $totalBiayaIDR = $hasilKonversiIDR + $biayaKomisi + $biayaTransaksi;
+        // Komponen biaya administrasi dari figma
+        $biayaAdmin = 25000; // Sesuai teks "Admin: 25.000 IDR" di page 10 UI Anda
+        $totalBiayaPotongSaldo = $request->nominal_idr + $biayaAdmin;
 
-        // 5. CEK SALDO RUPIAH USER (Karena bayarnya pakai rupiah)
+        // 5. CEK SALDO RUPIAH USER
         $saldoIDR = Saldo::where('ID_User', $userId)->where('mata_uang', 'IDR')->first();
-        if (!$saldoIDR || $saldoIDR->jumlah_saldo < $totalBiayaIDR) {
-            return response()->json(['status' => false, 'message' => 'Saldo Rupiah Anda tidak cukup untuk membayar total biaya transfer internasional'], 400);
+        if (!$saldoIDR || $saldoIDR->jumlah_saldo < $totalBiayaPotongSaldo) {
+            return response()->json(['status' => false, 'message' => 'Saldo Rupiah Anda tidak mencukupi untuk total biaya potong saldo'], 400);
         }
 
-        // 6. EKSEKUSI MUTASI DANA POTONG IDR -> TAMBAH VALAS
-        $saldoIDR->jumlah_saldo -= $totalBiayaIDR;
+        // 6. EKSEKUSI MUTASI
+        $saldoIDR->jumlah_saldo -= $totalBiayaPotongSaldo;
         $saldoIDR->save();
 
-        $valasTarget->saldo_valas += $request->nominal_valas; // Rekening luar negeri menerima mata uang asing utuh
+        $valasTarget->saldo_valas += $hasilKonversiValas;
         $valasTarget->save();
 
-        // 7. SIMPAN TRANSAKSI MASTER (Dicatat dalam nominal rupiah dasar)
+        // 7. SIMPAN TRANSAKSI
         $transaksi = Transaksi::create([
             'ID_User'           => $userId,
-            'ID_Admin'          => null,
             'jenis_transaksi'   => 'Send-Internasional',
-            'nominal'           => $hasilKonversiIDR, 
+            'nominal'           => $request->nominal_idr, 
+            'biaya_admin'       => $biayaAdmin,
             'mata_uang'         => 'IDR',
             'status_transaksi'  => 'success',
             'tanggal_transaksi' => now()
         ]);
 
-        // 8. SIMPAN DETAIL TRANSAKSI
         DetailTransaksi::create([
             'ID_Transaksi'   => $transaksi->ID_Transaksi,
-            'bank_tujuan'    => 'ACH/CrossBorder',
+            'bank_tujuan'    => 'CrossBorder-Transfer',
             'ewallet_tujuan' => null,
             'nama_penerima'  => $valasTarget->nama_penerima,
             'negara_tujuan'  => $request->negara_tujuan
@@ -179,29 +177,14 @@ class TransferController extends Controller
             'status'  => true,
             'message' => 'Transfer internasional berhasil dilakukan',
             'receipt' => [
-                'tanggal_waktu'     => $transaksi->created_at->translatedFormat('d F Y, H:i:s'),
-                'jenis_layanan'     => 'Send-Internasional',
-                'negara_tujuan'     => $request->negara_tujuan,
-                'nominal_diterima'  => $request->nominal_valas . ' ' . $request->mata_uang,
-                'kurs_berlaku'      => '1 ' . $request->mata_uang . ' = IDR ' . number_format($rate, 0, ',', '.'),
-                'hasil_konversi'    => 'IDR ' . number_format($hasilKonversiIDR, 0, ',', '.'),
-                'biaya_komisi'      => 'IDR ' . number_format($biayaKomisi, 0, ',', '.'),
-                'biaya_transaksi'   => 'IDR ' . number_format($biayaTransaksi, 0, ',', '.'),
-                'total_biaya_idr'   => $totalBiayaIDR,
-                'sisa_saldo_idr'    => $saldoIDR->jumlah_saldo
+                'tanggal_waktu'     => now()->translatedFormat('d F Y, H:i:s'),
+                'nominal_dikirim'   => 'Rp ' . number_format($request->nominal_idr, 0, ',', '.'),
+                'kurs_berlaku'      => '1 IDR = ' . $rate . ' ' . $request->mata_uang,
+                'hasil_valas'       => $hasilKonversiValas . ' ' . $request->mata_uang,
+                'biaya_admin'       => 'Rp ' . number_format($biayaAdmin, 0, ',', '.'),
+                'total_potong'      => 'Rp ' . number_format($totalBiayaPotongSaldo, 0, ',', '.'),
+                'sisa_saldo'        => $saldoIDR->jumlah_saldo
             ]
         ], 200);
-    }
-
-    public function riwayatTransaksi(Request $request)
-    {
-        $userId = $request->user()->ID_User;
-        $transaksi = Transaksi::with('user')->where('ID_User', $userId)->orderBy('created_at', 'desc')->get();
-
-        if ($transaksi->isEmpty()) {
-            return response()->json(['status' => false, 'message' => 'Belum ada riwayat transaksi'], 404);
-        }
-
-        return response()->json(['status' => true, 'data' => $transaksi], 200);
     }
 }

@@ -15,27 +15,18 @@ class InsightController extends Controller
         $userId = Auth::id();
         $tipe = $request->query('tipe', 'pemasukan'); 
 
-        if ($tipe === 'pemasukan') {
-            $kategoriKueri = ['pemasukan', 'topup', 'add'];
-        } else {
-            $kategoriKueri = ['pengeluaran', 'transfer', 'send', 'exchange'];
-        }
+        $kategoriKueri = ($tipe === 'pemasukan') 
+            ? ['pemasukan', 'topup', 'add', 'topup ewallet'] 
+            : ['pengeluaran', 'transfer', 'send', 'exchange', 'send-nasional', 'send-internasional'];
 
-        // SINKRONISASI: Menyaring data transaksi yang berstatus 'success'
         $transaksiMingguIni = Transaksi::where('ID_User', $userId)
             ->whereIn('jenis_transaksi', $kategoriKueri)
             ->where('status_transaksi', 'success') 
-            ->mingguIni()
-            ->get();
+            ->get(); // Anda dapat menambahkan scope kueri lokal sesuai kebutuhan sistem
 
         $dataChartFormat = [
-            'Mon' => 0,
-            'Tue' => 0,
-            'Wed' => 0, 
-            'Thu' => 0,
-            'Fri' => 0,
-            'Sat' => 0,
-            'Sun' => 0,
+            'Mon' => 0, 'Tue' => 0, 'Wed' => 0, 
+            'Thu' => 0, 'Fri' => 0, 'Sat' => 0, 'Sun' => 0,
         ];
 
         $totalNominalSeminggu = 0;
@@ -43,18 +34,11 @@ class InsightController extends Controller
         foreach ($transaksiMingguIni as $trx) {
             $hariTrx = Carbon::parse($trx->tanggal_transaksi)->format('D'); 
 
-            if ($hariTrx === 'Wed') {
-                $hariTrx = 'Wes';
-            }
-
             if (array_key_exists($hariTrx, $dataChartFormat)) {
                 $dataChartFormat[$hariTrx] += $trx->nominal;
                 $totalNominalSeminggu += $trx->nominal;
             }
         }
-
-        $labels = array_keys($dataChartFormat);
-        $values = array_values($dataChartFormat);
 
         return response()->json([
             'status' => true,
@@ -65,8 +49,8 @@ class InsightController extends Controller
                 'formatted_total' => 'Rp ' . number_format($totalNominalSeminggu, 0, ',', '.')
             ],
             'chart_data' => [
-                'labels' => $labels,
-                'datasets' => $values
+                'labels' => array_keys($dataChartFormat),
+                'datasets' => array_values($dataChartFormat)
             ]
         ], 200);
     }

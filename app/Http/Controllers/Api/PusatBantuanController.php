@@ -10,25 +10,6 @@ use Illuminate\Support\Facades\Validator;
 
 class PusatBantuanController extends Controller
 {
-    // ==================== SISI USER/NASABAH ====================
-
-    /**
-     * 1. Get List FAQ untuk ditampilkan di halaman utama Pusat Bantuan
-     */
-    public function getFaq()
-    {
-        $faq = PusatBantuan::where('tipe', 'faq')->get(['ID_Bantuan', 'pertanyaan_atau_subjek', 'jawaban_atau_pesan']);
-        
-        return response()->json([
-            'status' => true,
-            'message' => 'Daftar FAQ berhasil dimuat',
-            'data' => $faq
-        ], 200);
-    }
-
-    /**
-     * 2. Nasabah mengirim pesan keluhan melalui kotak input teks di bawah
-     */
     public function kirimKeluhan(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -42,110 +23,42 @@ class PusatBantuanController extends Controller
         $keluhan = PusatBantuan::create([
             'ID_User' => Auth::id(),
             'tipe' => 'keluhan',
-            'pertanyaan_atau_subjek' => 'Keluhan Nasabah - ' . Auth::user()->name,
+            'pertanyaan_atau_subjek' => 'Keluhan Nasabah - ' . Auth::user()->username, // Diperbaiki dari 'name' ke 'username'
             'jawaban_atau_pesan' => $request->pesan,
-            'status_keluhan' => 'open'
+            'status_keluhan' => 'Baru' // Sinkron dengan Admin UI: 'Baru', 'Proses', 'Selesai'
         ]);
 
         return response()->json([
             'status' => true,
-            'message' => 'Keluhan Anda berhasil dikirim. Tim TrustPay akan segera meninjau.',
+            'message' => 'Keluhan Anda berhasil dikirim.',
             'data' => $keluhan
         ], 201);
     }
 
-    // ==================== SISI ADMIN (Sesuai Disclaimer Anda) ====================
-
-    /**
-     * 3. Admin menambahkan FAQ baru
-     */
-    public function tambahFaq(Request $request)
+    public function ubahStatusKeluhan(Request $request, $id)
     {
-        $validator = Validator::make($request->all(), [
-            'pertanyaan' => 'required|string',
-            'jawaban'    => 'required|string'
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['status' => false, 'message' => $validator->errors()], 422);
+        if ($request->user()->role !== 'admin') {
+            return response()->json(['status' => false, 'message' => 'Akses khusus admin ditolak'], 403);
         }
 
-        $faq = PusatBantuan::create([
-            'tipe' => 'faq',
-            'pertanyaan_atau_subjek' => $request->pertanyaan,
-            'jawaban_atau_pesan' => $request->jawaban
-        ]);
+        $request->validate(['status' => 'required|in:Baru,Proses,Selesai']);
+        
+        $keluhan = PusatBantuan::where('tipe', 'keluhan')->find($id);
+        if (!$keluhan) {
+            return response()->json(['status' => false, 'message' => 'Data tidak ditemukan'], 404);
+        }
+
+        $keluhan->update(['status_keluhan' => $request->status]);
 
         return response()->json([
             'status' => true,
-            'message' => 'FAQ baru berhasil ditambahkan oleh Admin!',
-            'data' => $faq
-        ], 201);
-    }
-
-    /**
-     * 4. Admin mengedit FAQ yang sudah ada
-     */
-    public function editFaq(Request $request, $id)
-    {
-        $faq = PusatBantuan::where('tipe', 'faq')->find($id);
-
-        if (!$faq) {
-            return response()->json(['status' => false, 'message' => 'Data FAQ tidak ditemukan'], 404);
-        }
-
-        $faq->update([
-            'pertanyaan_atau_subjek' => $request->pertanyaan ?? $faq->pertanyaan_atau_subjek,
-            'jawaban_atau_pesan' => $request->jawaban ?? $faq->jawaban_atau_pesan
-        ]);
-
-        return response()->json([
-            'status' => true,
-            'message' => 'FAQ berhasil diperbarui oleh Admin!',
-            'data' => $faq
+            'message' => 'Status keluhan berhasil dirubah menjadi ' . $request->status
         ], 200);
     }
 
-    /**
-     * 5. Admin menghapus FAQ
-     */
-    public function hapusFaq($id)
-    {
-        $faq = PusatBantuan::where('tipe', 'faq')->find($id);
-
-        if (!$faq) {
-            return response()->json(['status' => false, 'message' => 'Data FAQ tidak ditemukan'], 404);
-        }
-
-        $faq->delete();
-
-        return response()->json([
-            'status' => true,
-            'message' => 'FAQ berhasil dihapus dari sistem.'
-        ], 200);
-    }
-
-    /**
-     * 6. Admin melihat daftar keluhan dari semua nasabah
-     */
     public function getKeluhanAdmin()
     {
-        // Menarik semua data yang tipenya 'keluhan'
-        $keluhan = PusatBantuan::where('tipe', 'keluhan')
-            ->orderBy('created_at', 'desc')
-            ->get();
-
-        if ($keluhan->isEmpty()) {
-            return response()->json([
-                'status' => false,
-                'message' => 'Belum ada keluhan nasabah yang masuk.'
-            ], 404);
-        }
-
-        return response()->json([
-            'status' => true,
-            'message' => 'Seluruh data keluhan nasabah berhasil ditarik oleh Admin.',
-            'data' => $keluhan
-        ], 200);
+        $keluhan = PusatBantuan::where('tipe', 'keluhan')->orderBy('created_at', 'desc')->get();
+        return response()->json(['status' => true, 'data' => $keluhan], 200);
     }
 }
