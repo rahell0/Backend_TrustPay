@@ -3,94 +3,66 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\Kurs;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
 class ExchangeController extends Controller
 {
-    // 1. Mengambil daftar kurs untuk Dropdown di UI Figma
+    /**
+     * Mengambil daftar kurs untuk ditampilkan di UI User & Admin
+     */
     public function index()
     {
-        $daftarKurs = Kurs::all();
-        
+        $kurs = DB::table('kurs')->get();
         return response()->json([
             'status' => true,
-            'message' => 'Daftar nilai tukar mata uang berhasil dimuat',
-            'data' => $daftarKurs
+            'message' => 'Data kurs berhasil dimuat.',
+            'data' => $kurs
         ], 200);
     }
 
-    // 2. Logika Kalkulator Penukaran (IDR -> Valas ATAU Valas -> IDR)
-    public function hitungKalkulasi(Request $request)
+    /**
+     * Fungsi Kritis: Admin memperbarui nilai kurs jual & beli dari Frontend Admin
+     */
+    public function updateKurs(Request $request)
     {
+        // Gembok Keamanan Tingkat Controller
+        if ($request->user()->role !== 'admin') {
+            return response()->json(['status' => false, 'message' => 'Akses ditolak. Anda bukan admin.'], 403);
+        }
+
+        // Validasi input parameter dari Frontend Admin temanmu
         $validator = Validator::make($request->all(), [
-            'mata_uang_asal'   => 'required|string|max:3',
-            'mata_uang_tujuan' => 'required|string|max:3',
-            'nominal_tukar'    => 'required|numeric|min:1'
+            'kode_valas' => 'required|string|exists:kurs,kode_valas',
+            'kurs_beli'  => 'required|numeric|min:0',
+            'kurs_jual'  => 'required|numeric|min:0',
         ]);
 
         if ($validator->fails()) {
             return response()->json([
                 'status' => false,
-                'message' => $validator->errors()
+                'message' => 'Validasi gagal.',
+                'errors' => $validator->errors()
             ], 422);
         }
 
-        $asal = strtoupper($request->mata_uang_asal);
-        $tujuan = strtoupper($request->mata_uang_tujuan);
-        $nominal = $request->nominal_tukar;
+        // Hitung nilai tengah secara otomatis untuk keperluan rumus kalkulator backup
+        $nilaiTengah = ($request->kurs_beli + $request->kurs_jual) / 2;
 
-        $hasilKonversi = 0;
-        $kursBerlakuText = "";
-
-        // Skenario A: Jika konversi dari Rupiah (IDR) ke Mata Uang Asing
-        if ($asal === 'IDR') {
-            $dataKurs = Kurs::where('kode_valas', $tujuan)->first();
-            
-            if (!$dataKurs) {
-                return response()->json(['status' => false, 'message' => 'Mata uang tujuan tidak didukung'], 404);
-            }
-
-            // Rumus: Rupiah dibagi Nilai Kurs Valas
-            $hasilKonversi = $nominal / $dataKurs->nilai_ke_idr;
-            $kursBerlakuText = "1 " . $tujuan . " = IDR " . number_format($dataKurs->nilai_ke_idr, 0, ',', '.');
-        } 
-        
-        // Skenario B: Jika konversi dari Mata Uang Asing ke Rupiah (IDR)
-        elseif ($tujuan === 'IDR') {
-            $dataKurs = Kurs::where('kode_valas', $asal)->first();
-
-            if (!$dataKurs) {
-                return response()->json(['status' => false, 'message' => 'Mata uang asal tidak didukung'], 404);
-            }
-
-            // Rumus: Nominal Valas dikali Nilai Kurs
-            $hasilKonversi = $nominal * $dataKurs->nilai_ke_idr;
-            $kursBerlakuText = "1 " . $asal . " = IDR " . number_format($dataKurs->nilai_ke_idr, 0, ',', '.');
-        } 
-        
-        // Skenario C: Proteksi jika asal dan tujuan sama (misal IDR ke IDR)
-        else {
-            if ($asal === $tujuan) {
-                $hasilKonversi = $nominal;
-                $kursBerlakuText = "1 " . $asal . " = 1 " . $tujuan;
-            } else {
-                return response()->json(['status' => false, 'message' => 'Fitur ini khusus konversi yang melibatkan mata uang IDR'], 400);
-            }
-        }
+        // Eksekusi update data ke database
+        DB::table('kurs')
+            ->where('kode_valas', $request->kode_valas)
+            ->update([
+                'kurs_beli'    => $request->kurs_beli,
+                'kurs_jual'    => $request->kurs_jual,
+                'nilai_ke_idr' => $nilaiTengah,
+                'updated_at'   => now()
+            ]);
 
         return response()->json([
             'status' => true,
-            'message' => 'Kalkulasi berhasil dihitung',
-            'kalkulator' => [
-                'mata_uang_asal'   => $asal,
-                'mata_uang_tujuan' => $tujuan,
-                'nominal_asal'     => $nominal,
-                'kurs_berlaku'     => $kursBerlakuText,
-                'hasil_konversi'   => round($hasilKonversi, 2), // Batasi 2 angka di belakang koma (Sesuai USD 57,53 di Figma)
-                'format_tampilan'  => $tujuan . " " . number_format($hasilKonversi, 2, ',', '.')
-            ]
+            'message' => 'Kurs mata uang ' . $request->kode_valas . ' berhasil diperbarui oleh Admin.'
         ], 200);
     }
 }

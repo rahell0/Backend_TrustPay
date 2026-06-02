@@ -2,22 +2,26 @@
 
 namespace App\Models;
 
-use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
-    use HasApiTokens, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable;
 
     protected $table = 'users';
-    protected $primaryKey = 'ID_User'; // Beritahu Laravel kalau primary key bukan 'id'
+    
+    // Kunci sinkronisasi relasi database TrustPay
+    protected $primaryKey = 'ID_User';
 
     protected $fillable = [
         'username',
         'nomor_hp',
         'password',
-        'role'
+        'role',
+        'status_operasional'
     ];
 
     protected $hidden = [

@@ -8,13 +8,12 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        // Memanggil seeder satu per satu secara berurutan [BEST PRACTICE]
         $this->call([
             UserSeeder::class,
+            KursSeeder::class,
             EwalletAccountSeeder::class,
             BankAccountSeeder::class,
             ValasAccountSeeder::class,
-            KursSeeder::class,
             TransaksiHistorySeeder::class,
             PusatBantuanSeeder::class,
         ]);

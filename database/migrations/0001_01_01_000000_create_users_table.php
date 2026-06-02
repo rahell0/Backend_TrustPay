@@ -11,9 +11,10 @@ return new class extends Migration
         Schema::create('users', function (Blueprint $table) {
             $table->bigIncrements('ID_User'); 
             $table->string('username');
-            $table->string('nomor_hp')->unique(); // KOREKSI: Email diganti menjadi nomor_hp
+            $table->string('nomor_hp')->unique(); 
             $table->string('password');
             $table->enum('role', ['user', 'admin'])->default('user');
+            $table->string('status_operasional')->default('Aktif');
             $table->rememberToken();
             $table->timestamps();
         });

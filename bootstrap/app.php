@@ -12,7 +12,14 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        //
+        
+        // REKOMENDASI TERBARU: Menggantikan validateCsrfTokens agar bebas warning
+        $middleware->preventRequestForgery(except: [
+            'api/*'
+        ]);
+
+        // Mengizinkan React Frontend (Port 5174) melalui stateful api
+        $middleware->statefulApi();
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

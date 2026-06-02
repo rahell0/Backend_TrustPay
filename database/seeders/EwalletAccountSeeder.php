@@ -13,7 +13,7 @@ class EwalletAccountSeeder extends Seeder
     {
         // 1. DATA SHOPEEPAY
         $shopeepayData = [
-            ['nomor_telepon' => '081362267690', 'nama_pemilik' => 'Rahel Jessica', 'saldo' => 500000],
+            ['nomor_telepon' => '081262267690', 'nama_pemilik' => 'Rahel Jessica', 'saldo' => 500000],
             ['nomor_telepon' => '081234567891', 'nama_pemilik' => 'Andi Wijaya', 'saldo' => 1250000],
             ['nomor_telepon' => '081987654321', 'nama_pemilik' => 'Rina Permata', 'saldo' => 75000],
         ];

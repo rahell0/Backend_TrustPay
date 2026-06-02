@@ -9,28 +9,45 @@ class KursSeeder extends Seeder
 {
     public function run(): void
     {
-       DB::table('kurs')->insert([
-    [
-        'kode_valas' => 'MYR', 
-        'nama_valas' => 'Malaysian Ringgit', 
-        'nilai_ke_idr' => 3600.00, 
-        'created_at' => now(), 
-        'updated_at' => now()
-    ],
-    [
-        'kode_valas' => 'SGD', 
-        'nama_valas' => 'Singapore Dollar', 
-        'nilai_ke_idr' => 12650.00, // Nilai asumsi kurs SGD ke IDR, silakan disesuaikan jika ada angka pasti dari modul kuliahmu
-        'created_at' => now(), 
-        'updated_at' => now()
-    ],
-    [
-        'kode_valas' => 'USD', 
-        'nama_valas' => 'United States Dollar', 
-        'nilai_ke_idr' => 17096.00, 
-        'created_at' => now(), 
-        'updated_at' => now()
-    ]
-    ]);
+        DB::table('kurs')->truncate();
+
+        DB::table('kurs')->insert([
+            [
+                'kode_valas' => 'MYR', 
+                'nama_valas' => 'Malaysian Ringgit', 
+                'kurs_beli' => 4450.00, 
+                'kurs_jual' => 4540.00, 
+                'nilai_ke_idr' => 4496.00, 
+                'created_at' => now(), 
+                'updated_at' => now()
+            ],
+            [
+                'kode_valas' => 'SGD', 
+                'nama_valas' => 'Singapore Dollar', 
+                'kurs_beli' => 13850.00, 
+                'kurs_jual' => 14010.00, 
+                'nilai_ke_idr' => 13930.00, 
+                'created_at' => now(), 
+                'updated_at' => now()
+            ],
+            [
+                'kode_valas' => 'USD', 
+                'nama_valas' => 'United States Dollar', 
+                'kurs_beli' => 17750.00, 
+                'kurs_jual' => 17910.00, 
+                'nilai_ke_idr' => 17828.00, 
+                'created_at' => now(), 
+                'updated_at' => now()
+            ],
+            [
+                'kode_valas' => 'IDR', 
+                'nama_valas' => 'Indonesian Rupiah', 
+                'kurs_beli' => 1.00, 
+                'kurs_jual' => 1.00, 
+                'nilai_ke_idr' => 1.00, 
+                'created_at' => now(), 
+                'updated_at' => now()
+            ],
+        ]);
     }
 }

@@ -16,14 +16,14 @@ class AuthController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'username' => 'required|string|max:255',
-            'nomor_hp' => 'required|string|unique:users,nomor_hp|regex:/^[0-9]{9,15}$/', // Validasi format nomor HP
+            'nomor_hp' => 'required|string|unique:users,nomor_hp|regex:/^[0-9]{9,15}$/',
             'password' => [
                 'required',
                 'min:8',
                 'regex:/[A-Z]/',
                 'regex:/[a-z]/',
                 'regex:/[0-9]/',
-                'regex:/[@$!%*#?&]/'
+                'regex:/[@$%]/'
             ],
             'pin'      => 'required|digits:6'
         ]);
@@ -35,23 +35,22 @@ class AuthController extends Controller
             ], 422);
         }
 
-        // 1. Buat User baru dengan nomor_hp
         $user = User::create([
             'username' => $request->username,
             'nomor_hp' => $request->nomor_hp,
             'password' => Hash::make($request->password),
+            'role'     => 'user',
+            'status_operasional' => 'Aktif'
         ]);
 
-        // 2. Buat PIN otomatis
         Pin::create([
             'ID_User'  => $user->ID_User,
             'Kode_PIN' => Hash::make($request->pin)
         ]);
 
-        // 3. FIX: Berikan Saldo Simulasi Otomatis Rp 10.000.000 saat berhasil register
         Saldo::create([
             'ID_User'      => $user->ID_User,
-            'jumlah_saldo' => 10000000, // <--- UBAH DI SINI (Dari 0 menjadi 10 Juta rupiah)
+            'jumlah_saldo' => 10000000, // Rp 10.000.000 saldo awal simulasi
             'mata_uang'    => 'IDR'
         ]);
 
@@ -69,7 +68,6 @@ class AuthController extends Controller
             'password' => 'required|string',
         ]);
 
-        // Cari berdasarkan nomor_hp, bukan email
         $user = User::where('nomor_hp', $request->nomor_hp)->first();
 
         if (!$user || !Hash::check($request->password, $user->password)) {
@@ -85,16 +83,19 @@ class AuthController extends Controller
             'status'  => true,
             'message' => 'Login berhasil',
             'token'   => $token,
-            'user'    => $user
+            'user'    => [
+                'ID_User'  => $user->ID_User,
+                'username' => $user->username,
+                'nomor_hp' => $user->nomor_hp,
+                'role'     => $user->role,
+                'status'   => $user->status_operasional
+            ]
         ], 200);
     }
 
-    // KOREKSI UTAMA: Modifikasi Profile API agar otomatis mengirim data Saldo ke Dashboard Figma kamu!
     public function profile(Request $request)
     {
         $user = $request->user();
-        
-        // Ambil data saldo milik user yang sedang login
         $saldo = Saldo::where('ID_User', $user->ID_User)->first();
 
         return response()->json([
@@ -108,17 +109,13 @@ class AuthController extends Controller
         ], 200);
     }
 
-    /**
-     * FITUR LOGOUT: Menghapus token aktif nasabah (Sanctum)
-     */
     public function logout(Request $request)
     {
-        // Menghapus token yang saat ini sedang digunakan untuk login
         $request->user()->currentAccessToken()->delete();
 
         return response()->json([
             'status'  => true,
-            'message' => 'Logout berhasil. Sesi token Anda telah dihapus dari sistem TrustPay.'
+            'message' => 'Logout berhasil. Sesi token Anda telah dihapus.'
         ], 200);
     }
 }
